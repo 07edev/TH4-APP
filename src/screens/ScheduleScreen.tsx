@@ -2,6 +2,7 @@ import React, {useMemo, useState} from 'react';
 import {
   FlatList,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,7 +10,6 @@ import {
   View,
 } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ScreenContainer} from '../components/ScreenContainer';
@@ -19,9 +19,8 @@ import {subjects} from '../data/subjects';
 import {initialAssignments} from '../data/assignments';
 import {colors} from '../theme/colors';
 import {spacing} from '../theme/spacing';
-import {RootStackParamList, TabParamList} from '../navigation/navigationTypes';
-
-type Props = BottomTabScreenProps<TabParamList, 'Schedule'>;
+import {RootStackParamList} from '../navigation/navigationTypes';
+import {useAppData} from '../context/AppDataContext';
 
 type CalendarDay = {
   label: string;
@@ -42,7 +41,7 @@ function toDateKey(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-function createCalendarDays(month: Date): CalendarDay[] {
+function createCalendarDays(month: Date, scheduleEvents: Array<{date?: string; dayOfWeek: number}>, assignmentDates: string[]): CalendarDay[] {
   const year = month.getFullYear();
   const monthIndex = month.getMonth();
   const dayCount = new Date(year, monthIndex + 1, 0).getDate();
@@ -56,8 +55,8 @@ function createCalendarDays(month: Date): CalendarDay[] {
       date: String(index + 1),
       day: dateKey,
       hasEvents:
-        schedules.some(item => item.date === dateKey) ||
-        initialAssignments.some(item => item.dueDate.slice(0, 10) === dateKey),
+        scheduleEvents.some(item => item.date ? item.date === dateKey : item.dayOfWeek === (date.getDay() || 7)) ||
+        assignmentDates.some(item => item === dateKey),
     };
   });
 }
@@ -66,34 +65,47 @@ function formatMonth(month: Date) {
   return `Tháng ${month.getMonth() + 1}/${month.getFullYear()}`;
 }
 
-export function ScheduleScreen({}: Props) {
+export function ScheduleScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const [displayMonth, setDisplayMonth] = useState(new Date(2026, 9, 1));
-  const [selectedDate, setSelectedDate] = useState('2026-10-19');
+  const {sessions: apiSessions, assignments: apiAssignments, courses} = useAppData();
+  const today = new Date();
+  const todayKey = toDateKey(today);
+  const [refreshing, setRefreshing] = useState(false);
+  const [displayMonth, setDisplayMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
+  const [selectedDate, setSelectedDate] = useState(todayKey);
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
-  const calendarDays = useMemo(() => createCalendarDays(displayMonth), [displayMonth]);
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [courseFilter, setCourseFilter] = useState('all');
+  const [roomFilter, setRoomFilter] = useState('all');
+  const [activityFilter, setActivityFilter] = useState<'all' | 'schedule' | 'assignment'>('all');
+  const scheduleEvents = apiSessions.data?.map(item => ({id: String(item.id), subjectId: String(item.courseId), dayOfWeek: item.dayOfWeek, startTime: item.startTime, endTime: item.endTime, room: item.room, note: item.note, date: item.date})) ?? schedules.map(item => ({...item, subjectId: item.subjectId, dayOfWeek: Number(item.dayOfWeek === 'CN' ? 7 : item.dayOfWeek.replace('T', '')), date: item.date}));
+  const assignmentEvents = apiAssignments.data?.map(item => ({id: String(item.id), subjectId: String(item.courseId), title: item.title, description: item.description, dueDate: item.dueDate, status: item.status === 'done' ? 'completed' as const : 'pending' as const})) ?? initialAssignments;
+  const calendarDays = useMemo(() => createCalendarDays(displayMonth, scheduleEvents, assignmentEvents.map(item => item.dueDate.slice(0, 10))), [displayMonth, scheduleEvents, assignmentEvents]);
   const selectedDay = calendarDays.find(item => item.day === selectedDate);
 
   const daySchedules = useMemo(
-    () => schedules.filter(item => item.date === selectedDate),
-    [selectedDate],
+    () => scheduleEvents.filter(item => item.date ? item.date === selectedDate : item.dayOfWeek === ((new Date(`${selectedDate}T00:00:00`).getDay() || 7))),
+    [selectedDate, scheduleEvents],
   );
   const dayAssignments = useMemo(
     () =>
-      initialAssignments.filter(
+      assignmentEvents.filter(
         item => item.dueDate.slice(0, 10) === selectedDate,
       ),
-    [selectedDate],
+    [selectedDate, assignmentEvents],
   );
   const filteredSchedules = daySchedules.filter(item => {
-    const subject = subjects.find(value => value.id === item.subjectId);
-    return `${subject?.name ?? ''} ${subject?.code ?? ''} ${item.room}`
+    const subject = courses.data?.find(value => String(value.id) === item.subjectId) ?? subjects.find(value => value.id === item.subjectId);
+    return (courseFilter === 'all' || item.subjectId === courseFilter) &&
+      (roomFilter === 'all' || item.room === roomFilter) &&
+      activityFilter !== 'assignment' &&
+      `${subject?.name ?? ''} ${subject?.code ?? ''} ${item.room}`
       .toLowerCase()
       .includes(searchText.toLowerCase());
   });
   const filteredAssignments = dayAssignments.filter(item =>
-    item.title.toLowerCase().includes(searchText.toLowerCase()),
+    activityFilter !== 'schedule' && item.title.toLowerCase().includes(searchText.toLowerCase()),
   );
 
   const changeMonth = (offset: number) => {
@@ -105,6 +117,12 @@ export function ScheduleScreen({}: Props) {
     setDisplayMonth(nextMonth);
     setSelectedDate(toDateKey(nextMonth));
     setSearchText('');
+  };
+
+  const refresh = async () => {
+    setRefreshing(true);
+    await Promise.all([apiSessions.refresh(), apiAssignments.refresh(), courses.refresh()]);
+    setRefreshing(false);
   };
 
   return (
@@ -125,14 +143,18 @@ export function ScheduleScreen({}: Props) {
 
       <View style={styles.calendarPanel}>
         <View style={styles.monthRow}>
-          <Pressable style={styles.monthButton} onPress={() => setSearchVisible(value => !value)}>
+          <Pressable style={styles.monthButton} onPress={() => setFilterVisible(value => !value)}>
             <Ionicons name="funnel-outline" size={24} color={colors.text} />
           </Pressable>
           <View style={styles.monthTitleRow}>
             <Pressable onPress={() => changeMonth(-1)}>
               <Ionicons name="chevron-back" size={21} color={colors.mutedText} />
             </Pressable>
-            <Pressable onPress={() => setDisplayMonth(new Date(2026, 9, 1))}>
+            <Pressable onPress={() => {
+              const current = new Date();
+              setDisplayMonth(new Date(current.getFullYear(), current.getMonth(), 1));
+              setSelectedDate(toDateKey(current));
+            }}>
               <Text style={styles.monthTitle}>{formatMonth(displayMonth)}</Text>
             </Pressable>
             <Pressable onPress={() => changeMonth(1)}>
@@ -142,9 +164,9 @@ export function ScheduleScreen({}: Props) {
           <Pressable
             style={styles.monthButton}
             onPress={() => {
-              const today = new Date(2026, 9, 19);
-              setDisplayMonth(new Date(today.getFullYear(), today.getMonth(), 1));
-              setSelectedDate(toDateKey(today));
+              const current = new Date();
+              setDisplayMonth(new Date(current.getFullYear(), current.getMonth(), 1));
+              setSelectedDate(toDateKey(current));
             }}>
             <Ionicons name="search-outline" size={27} color={colors.text} />
           </Pressable>
@@ -161,6 +183,22 @@ export function ScheduleScreen({}: Props) {
               style={styles.searchInput}
               autoFocus
             />
+          </View>
+        )}
+        {filterVisible && (
+          <View style={styles.filterPanel}>
+            <Text style={styles.filterTitle}>Lọc hoạt động</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+              {(['all', 'schedule', 'assignment'] as const).map(value => <Pressable key={value} onPress={() => setActivityFilter(value)} style={[styles.filterChip, activityFilter === value && styles.activeFilterChip]}><Text style={activityFilter === value ? styles.activeFilterText : styles.filterText}>{value === 'all' ? 'Tất cả' : value === 'schedule' ? 'Buổi học' : 'Bài tập'}</Text></Pressable>)}
+            </ScrollView>
+            <Text style={styles.filterTitle}>Môn học</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+              {[{id: 'all', name: 'Tất cả'}, ...(courses.data ?? []).map(course => ({id: String(course.id), name: course.code}))].map(item => <Pressable key={item.id} onPress={() => setCourseFilter(item.id)} style={[styles.filterChip, courseFilter === item.id && styles.activeFilterChip]}><Text style={courseFilter === item.id ? styles.activeFilterText : styles.filterText}>{item.name}</Text></Pressable>)}
+            </ScrollView>
+            <Text style={styles.filterTitle}>Phòng học</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+              {['all', ...Array.from(new Set(scheduleEvents.map(item => item.room)))].map(room => <Pressable key={room} onPress={() => setRoomFilter(room)} style={[styles.filterChip, roomFilter === room && styles.activeFilterChip]}><Text style={roomFilter === room ? styles.activeFilterText : styles.filterText}>{room === 'all' ? 'Tất cả' : room}</Text></Pressable>)}
+            </ScrollView>
           </View>
         )}
 
@@ -197,14 +235,14 @@ export function ScheduleScreen({}: Props) {
       <View style={styles.contentHeader}>
         <View>
           <Text style={styles.todayTitle}>
-            {selectedDate === '2026-10-19' ? 'Hôm nay, ' : ''}
+            {selectedDate === toDateKey(new Date()) ? 'Hôm nay, ' : ''}
             {formatSelectedDate(selectedDate)}
           </Text>
           <Text style={styles.eventCount}>
             {filteredSchedules.length + filteredAssignments.length} hoạt động trong ngày
           </Text>
         </View>
-        <Pressable style={styles.addButton}>
+        <Pressable style={styles.addButton} onPress={() => navigation.navigate('ScheduleForm', {date: selectedDate})}>
           <Ionicons name="add" size={27} color={colors.surface} />
         </Pressable>
       </View>
@@ -216,9 +254,10 @@ export function ScheduleScreen({}: Props) {
         ]}
         keyExtractor={item => `${item.type}-${item.item.id}`}
         contentContainerStyle={styles.list}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} />}
         renderItem={({item}) => {
           if (item.type === 'schedule') {
-            const subject = subjects.find(value => value.id === item.item.subjectId);
+            const subject = courses.data?.find(value => String(value.id) === item.item.subjectId) ?? subjects.find(value => value.id === item.item.subjectId);
             return (
               <Pressable
                 style={[styles.eventCard, styles.classCard]}
@@ -307,6 +346,13 @@ const styles = StyleSheet.create({
   monthTitle: {color: colors.primaryDark, fontSize: 23, fontWeight: '800'},
   searchBox: {flexDirection: 'row', alignItems: 'center', marginHorizontal: spacing.lg, marginTop: spacing.md, paddingHorizontal: spacing.md, borderWidth: 1, borderColor: colors.border, borderRadius: 12, backgroundColor: colors.background},
   searchInput: {flex: 1, color: colors.text, paddingVertical: 10, paddingHorizontal: spacing.sm},
+  filterPanel: {marginHorizontal: spacing.lg, marginTop: spacing.md, padding: spacing.md, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border},
+  filterTitle: {fontWeight: '800', color: colors.text, marginBottom: spacing.sm, marginTop: spacing.sm},
+  filterRow: {gap: spacing.sm},
+  filterChip: {paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border},
+  activeFilterChip: {backgroundColor: colors.primary, borderColor: colors.primary},
+  filterText: {color: colors.mutedText},
+  activeFilterText: {color: colors.surface, fontWeight: '700'},
   daysRow: {paddingHorizontal: spacing.md, paddingTop: spacing.lg, gap: spacing.sm},
   dayCell: {width: 52, alignItems: 'center'},
   weekday: {fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 8},

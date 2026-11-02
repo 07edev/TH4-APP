@@ -7,6 +7,8 @@ export type RootStackParamList = {
   AssignmentDetail: {assignmentId: string};
   AcademicResultDetail: {resultId: string};
   EditProfile: undefined;
+  AssignmentForm: undefined;
+  ScheduleForm: {date: string};
 };
 
 export type RootScreenProps<RouteName extends keyof RootStackParamList> =

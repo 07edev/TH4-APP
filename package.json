@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
+    "api": "json-server --watch db.json --host 0.0.0.0 --port 3000 --delay 800",
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
@@ -11,6 +12,7 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^3.1.1",
+    "@react-native-community/netinfo": "^12.0.1",
     "@react-native-vector-icons/ionicons": "^14.0.0",
     "@react-native/new-app-screen": "0.88.0",
     "@react-navigation/bottom-tabs": "^7.21.0",
@@ -38,6 +40,7 @@
     "@types/react-test-renderer": "^19.1.0",
     "eslint": "^8.19.0",
     "jest": "^29.6.3",
+    "json-server": "^0.17.4",
     "prettier": "2.8.8",
     "react-test-renderer": "19.3.0",
     "typescript": "^6.0.3"

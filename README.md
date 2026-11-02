@@ -95,3 +95,60 @@ To learn more about React Native, take a look at the following resources:
 - [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
 - [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
 - [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+
+## API and offline mode
+
+The weekly implementation includes a local JSON Server API in `db.json`. Start
+it from the project root with:
+
+```powershell
+npm run api
+```
+
+The Android emulator uses `http://10.0.2.2:3000`. Successful GET requests are
+cached in AsyncStorage. When the device is offline, cached data remains
+available and mutations are placed in an outbox. The outbox is replayed in
+creation order when connectivity returns. If the server has a newer
+`updatedAt` value than an offline mutation, server data wins to avoid
+overwriting newer changes.
+
+## Application features
+
+- Five bottom tabs: overview, courses, schedule, assignments, and profile.
+- Native stack detail screens for courses, schedule sessions, assignments, and grades.
+- Each bottom-tab area has its own native stack, preserving tab-specific back history.
+- Course search, assignment filtering/status updates, assignment creation, profile editing,
+  GPA calculation, semester grade data, loading/error/empty states, and offline banner.
+- Overview, courses, schedule, assignments, and profile data use the shared API/cache layer.
+- Pull down on Overview, Schedule, and Profile to refresh their API data.
+- Add a schedule session from the selected calendar date using the `+` button.
+
+## API endpoints
+
+The local server exposes:
+
+```text
+GET    /students/1
+GET    /courses?_sort=id
+GET    /sessions?_expand=course
+POST   /sessions
+GET    /assignments?_expand=course&_sort=dueDate
+POST   /assignments
+PATCH  /assignments/:id
+GET    /grades?_expand=course
+```
+
+For Android Emulator, keep `npm run api` running and use `10.0.2.2` as the
+host address. Test offline behavior by stopping the API, changing assignment
+status or profile data, then starting it again. Pending operations appear as a
+badge on the Bài tập tab and are replayed when connectivity returns.
+
+## Validation checklist
+
+1. Start API and confirm courses, profile, assignments, schedule, and grades load.
+2. Open each detail screen from its API-backed list.
+3. Pull to refresh Overview, Schedule, and Profile.
+4. Stop API and confirm cached data remains visible.
+5. Change assignment status offline and confirm it is queued.
+6. Create an assignment offline and confirm it syncs after reconnecting.
+7. Edit profile offline and confirm the newer server record wins on conflict.

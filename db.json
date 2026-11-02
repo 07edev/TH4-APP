@@ -1,0 +1,42 @@
+{
+  "students": [
+    {"id": 1, "studentCode": "SV2021001", "fullName": "Bùi Văn Hiệp", "className": "CNTT-K21A", "major": "Công nghệ thông tin", "email": "an.nv@student.edu.vn", "phone": "0912345678", "updatedAt": "2026-11-02T08:00:00Z"},
+    {"id": 2, "studentCode": "SV2021002", "fullName": "Trần Minh Anh", "className": "CNTT-K21A", "major": "Công nghệ thông tin", "email": "anh.tm@student.edu.vn", "phone": "0912345679", "updatedAt": "2026-10-20T08:00:00Z"},
+    {"id": 3, "studentCode": "SV2021003", "fullName": "Lê Hoàng Nam", "className": "CNTT-K21A", "major": "Công nghệ thông tin", "email": "nam.lh@student.edu.vn", "phone": "0912345680", "updatedAt": "2026-10-20T08:00:00Z"},
+    {"id": 4, "studentCode": "SV2021004", "fullName": "Phạm Thu Hà", "className": "CNTT-K21A", "major": "Công nghệ thông tin", "email": "ha.pt@student.edu.vn", "phone": "0912345681", "updatedAt": "2026-10-20T08:00:00Z"},
+    {"id": 5, "studentCode": "SV2021005", "fullName": "Đỗ Quang Minh", "className": "CNTT-K21A", "major": "Công nghệ thông tin", "email": "minh.dq@student.edu.vn", "phone": "0912345682", "updatedAt": "2026-10-20T08:00:00Z"}
+  ],
+  "courses": [
+    {"id": 1, "code": "INT3120", "name": "Phát triển ứng dụng di động", "credits": 3, "lecturer": "TS. Trần Minh", "description": "Lập trình ứng dụng di động đa nền tảng với React Native.", "semester": "HK1 2026-2027"},
+    {"id": 2, "code": "INT3050", "name": "Cơ sở dữ liệu", "credits": 3, "lecturer": "PGS. Trần Thị Bình", "description": "Mô hình hóa, thiết kế và khai thác cơ sở dữ liệu.", "semester": "HK1 2026-2027"},
+    {"id": 3, "code": "INT3100", "name": "Công nghệ phần mềm", "credits": 3, "lecturer": "TS. Lê Hoàng Nam", "description": "Quy trình và công cụ xây dựng sản phẩm phần mềm.", "semester": "HK1 2026-2027"},
+    {"id": 4, "code": "ENG2040", "name": "Tiếng Anh chuyên ngành", "credits": 2, "lecturer": "ThS. Phạm Thu Hà", "description": "Tiếng Anh phục vụ học tập và làm việc trong lĩnh vực CNTT.", "semester": "HK1 2026-2027"},
+    {"id": 5, "code": "MAT2020", "name": "Xác suất thống kê", "credits": 3, "lecturer": "TS. Nguyễn Đức Minh", "description": "Các khái niệm xác suất và phương pháp thống kê ứng dụng.", "semester": "HK1 2026-2027"}
+  ],
+  "sessions": [
+    {"id": 1, "courseId": 1, "date": "2026-10-19", "dayOfWeek": 2, "startTime": "07:00", "endTime": "09:30", "room": "P.301-A2", "note": "Mang laptop"},
+    {"id": 2, "courseId": 2, "date": "2026-10-20", "dayOfWeek": 3, "startTime": "09:50", "endTime": "12:10", "room": "B105", "note": "Ôn tập chương 1 và 2"},
+    {"id": 3, "courseId": 3, "date": "2026-10-21", "dayOfWeek": 4, "startTime": "13:00", "endTime": "15:20", "room": "C302", "note": "Làm việc theo nhóm"},
+    {"id": 4, "courseId": 4, "date": "2026-10-22", "dayOfWeek": 5, "startTime": "07:30", "endTime": "09:00", "room": "D201", "note": "Chuẩn bị thuyết trình"},
+    {"id": 5, "courseId": 5, "date": "2026-10-23", "dayOfWeek": 6, "startTime": "13:00", "endTime": "15:20", "room": "E202", "note": "Mang máy tính cá nhân"},
+    {"id": 6, "courseId": 1, "date": "2026-11-02", "dayOfWeek": 1, "startTime": "07:00", "endTime": "09:30", "room": "P.301-A2", "note": "Mang laptop"},
+    {"id": 7, "courseId": 2, "date": "2026-11-03", "dayOfWeek": 2, "startTime": "09:50", "endTime": "12:10", "room": "B105", "note": "Ôn tập chương 3"},
+    {"id": 8, "courseId": 3, "date": "2026-11-04", "dayOfWeek": 3, "startTime": "13:00", "endTime": "15:20", "room": "C302", "note": "Làm việc theo nhóm"},
+    {"id": 9, "courseId": 4, "date": "2026-11-05", "dayOfWeek": 4, "startTime": "07:30", "endTime": "09:00", "room": "D201", "note": "Chuẩn bị thuyết trình"},
+    {"id": 10, "courseId": 5, "date": "2026-11-06", "dayOfWeek": 5, "startTime": "13:00", "endTime": "15:20", "room": "E202", "note": "Bài tập chương 4"}
+  ],
+  "assignments": [
+    {"id": 1, "courseId": 1, "title": "Thực hành 4: API & Offline", "description": "Kết nối API và hỗ trợ chế độ offline.", "dueDate": "2026-11-09T23:59:00Z", "status": "todo", "updatedAt": "2026-10-26T08:00:00Z"},
+    {"id": 2, "courseId": 2, "title": "Thiết kế cơ sở dữ liệu thư viện", "description": "Vẽ ERD và viết các câu lệnh tạo bảng.", "dueDate": "2026-11-12T23:59:00Z", "status": "todo", "updatedAt": "2026-10-26T08:00:00Z"},
+    {"id": 3, "courseId": 3, "title": "Phân tích yêu cầu phần mềm", "description": "Viết tài liệu đặc tả yêu cầu cho hệ thống bán hàng.", "dueDate": "2026-10-18T23:59:00Z", "status": "done", "updatedAt": "2026-10-26T08:00:00Z"},
+    {"id": 4, "courseId": 4, "title": "Thuyết trình về trí tuệ nhân tạo", "description": "Chuẩn bị bài thuyết trình nhóm bằng tiếng Anh.", "dueDate": "2026-11-15T23:59:00Z", "status": "todo", "updatedAt": "2026-10-26T08:00:00Z"},
+    {"id": 5, "courseId": 5, "title": "Bài tập xác suất", "description": "Hoàn thành bài tập chương 3.", "dueDate": "2026-11-20T23:59:00Z", "status": "done", "updatedAt": "2026-10-26T08:00:00Z"}
+  ],
+  "grades": [
+    {"id": 1, "courseId": 1, "semester": "HK1 2026-2027", "attendance": 9, "midterm": 7.5, "final": 8.5, "total": 8.25, "letter": "B+"},
+    {"id": 2, "courseId": 2, "semester": "HK1 2026-2027", "attendance": 9, "midterm": 8.5, "final": 8.5, "total": 8.5, "letter": "A"},
+    {"id": 3, "courseId": 3, "semester": "HK1 2026-2027", "attendance": 8, "midterm": 7.5, "final": 7.5, "total": 7.55, "letter": "B"},
+    {"id": 4, "courseId": 4, "semester": "HK1 2026-2027", "attendance": 8.5, "midterm": 6.5, "final": 7, "total": 7.1, "letter": "B"},
+    {"id": 5, "courseId": 5, "semester": "HK1 2026-2027", "attendance": 7, "midterm": 5.5, "final": 5, "total": 5.35, "letter": "C"}
+  ]
+}
